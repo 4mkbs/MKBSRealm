@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -9,37 +10,58 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for existing auth on mount
-    const token = localStorage.getItem("auth_token");
-    const profile = localStorage.getItem("user_profile");
+    const checkAuth = async () => {
+      const token = localStorage.getItem("auth_token");
+      const profile = localStorage.getItem("user_profile");
 
-    if (token && profile) {
-      setUser(JSON.parse(profile));
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+      if (token && profile) {
+        try {
+          // Verify token with backend
+          const response = await authAPI.getMe();
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        } catch (error) {
+          // Token invalid, clear storage
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_profile");
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
-  const login = (email, password) => {
-    // Mock login - replace with real API call
-    const mockUser = { name: "User", email };
-    localStorage.setItem("auth_token", "mock_token");
-    localStorage.setItem("user_profile", JSON.stringify(mockUser));
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    return { success: true };
+  const login = async (email, password) => {
+    try {
+      const response = await authAPI.login(email, password);
+      const { user, token } = response.data;
+
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_profile", JSON.stringify(user));
+      setUser(user);
+      setIsAuthenticated(true);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
-  const register = (userData) => {
-    // Mock register - replace with real API call
-    const newUser = {
-      name: `${userData.firstName} ${userData.lastName}`,
-      email: userData.email,
-    };
-    localStorage.setItem("auth_token", "mock_token");
-    localStorage.setItem("user_profile", JSON.stringify(newUser));
-    setUser(newUser);
-    setIsAuthenticated(true);
-    return { success: true };
+  const register = async (userData) => {
+    try {
+      const response = await authAPI.register(userData);
+      const { user, token } = response.data;
+
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_profile", JSON.stringify(user));
+      setUser(user);
+      setIsAuthenticated(true);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
   const logout = () => {

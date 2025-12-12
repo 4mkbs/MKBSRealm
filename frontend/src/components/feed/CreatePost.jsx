@@ -2,14 +2,14 @@ import React from "react";
 import { Card, Button } from "../ui";
 import { useAuth } from "../../context/AuthContext";
 
-const CreatePost = ({ postText, setPostText, onPost }) => {
+const CreatePost = ({ postText, setPostText, onPost, posting = false }) => {
   const { user } = useAuth();
 
   return (
     <Card className="p-4 mb-6">
       <div className="flex items-start gap-3">
         <img
-          src="https://i.pravatar.cc/150?img=8"
+          src={user?.avatar || "https://i.pravatar.cc/150?img=8"}
           alt="Your avatar"
           className="w-10 h-10 rounded-full"
         />
@@ -22,6 +22,7 @@ const CreatePost = ({ postText, setPostText, onPost }) => {
           className="flex-1 resize-none border-none bg-gray-100 rounded-full px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1877f2]/30 min-h-[44px]"
           rows={1}
           onFocus={(e) => (e.target.style.borderRadius = "12px")}
+          disabled={posting}
         />
       </div>
       <hr className="my-3 border-gray-200" />
@@ -46,8 +47,8 @@ const CreatePost = ({ postText, setPostText, onPost }) => {
             </span>
           </button>
         </div>
-        <Button onClick={onPost} disabled={!postText.trim()}>
-          Post
+        <Button onClick={onPost} disabled={!postText.trim() || posting}>
+          {posting ? "Posting..." : "Post"}
         </Button>
       </div>
     </Card>

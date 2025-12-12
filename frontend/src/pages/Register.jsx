@@ -17,10 +17,11 @@ const Register = () => {
     gender: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -43,9 +44,14 @@ const Register = () => {
       return;
     }
 
-    const result = register(form);
+    setLoading(true);
+    const result = await register(form);
+    setLoading(false);
+
     if (result.success) {
       navigate("/home");
+    } else {
+      setError(result.error || "Registration failed");
     }
   };
 
@@ -152,8 +158,9 @@ const Register = () => {
               variant="success"
               size="lg"
               className="w-full font-bold"
+              disabled={loading}
             >
-              Sign Up
+              {loading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
 

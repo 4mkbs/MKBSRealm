@@ -1,66 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CreatePost, PostCard } from "../components/feed";
 import { Button } from "../components/ui";
-
-const INITIAL_POSTS = [
-  {
-    id: 1,
-    author: "John Doe",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    time: "2 hours ago",
-    content:
-      "Just had an amazing day at the beach! 🏖️ The sunset was absolutely stunning.",
-    likes: 24,
-    comments: 5,
-  },
-  {
-    id: 2,
-    author: "Jane Smith",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    time: "5 hours ago",
-    content:
-      "Excited to announce that I just got my dream job! Thank you everyone for your support! 🎉",
-    likes: 156,
-    comments: 42,
-  },
-  {
-    id: 3,
-    author: "Mike Johnson",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    time: "Yesterday",
-    content: "Coffee and coding - the perfect combination ☕💻",
-    likes: 18,
-    comments: 3,
-  },
-];
+import { postsAPI } from "../services/api";
 
 const Home = () => {
   const { user } = useAuth();
   const [postText, setPostText] = useState("");
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const handlePost = () => {
-    if (!postText.trim()) return;
-    const newPost = {
-      id: Date.now(),
-      author: user?.name || "You",
-      avatar: "https://i.pravatar.cc/150?img=8",
-      time: "Just now",
-      content: postText,
-      likes: 0,
-      comments: 0,
-    };
-    setPosts([newPost, ...posts]);
-    setPostText("");
+  // Fetch posts on mount
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async (pageNum = 1) => {
+    try {
+      setLoading(true);
+      const response = await postsAPI.getPosts(pageNum);
+      const { posts: newPosts, pagination } = response.data;
+
+      if (pageNum === 1) {
+        setPosts(newPosts);
+      } else {
+        setPosts((prev) => [...prev, ...newPosts]);
+      }
+
+      setHasMore(pagination.page < pagination.pages);
+      setPage(pageNum);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLike = (postId) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId ? { ...post, likes: post.likes + 1 } : post
-      )
-    );
+  const handlePost = async () => {
+    if (!postText.trim()) return;
+
+    try {
+      setPosting(true);
+      const response = await postsAPI.createPost(postText);
+      setPosts([response.data.post, ...posts]);
+      setPostText("");
+    } catch (error) {
+      console.error("Error creating post:", error);
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      const response = await postsAPI.toggleLike(postId);
+      setPosts(
+        posts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes: response.data.likes,
+                isLiked: response.data.isLiked,
+              }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      fetchPosts(page + 1);
+    }
   };
 
   return (
@@ -79,19 +95,35 @@ const Home = () => {
           postText={postText}
           setPostText={setPostText}
           onPost={handlePost}
+          posting={posting}
         />
 
         {/* Posts Feed */}
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} onLike={handleLike} />
-          ))}
-        </div>
+        {loading && posts.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1877f2] mx-auto"></div>
+            <p className="text-gray-500 mt-4">Loading posts...</p>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="text-center py-8 bg-white rounded-xl shadow">
+            <p className="text-gray-500">No posts yet. Be the first to post!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} onLike={handleLike} />
+            ))}
+          </div>
+        )}
 
         {/* Load More */}
-        <div className="text-center mt-6">
-          <Button variant="secondary">Load more posts</Button>
-        </div>
+        {posts.length > 0 && hasMore && (
+          <div className="text-center mt-6">
+            <Button variant="secondary" onClick={loadMore} disabled={loading}>
+              {loading ? "Loading..." : "Load more posts"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

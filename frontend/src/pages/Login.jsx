@@ -9,10 +9,11 @@ const Login = () => {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -21,9 +22,14 @@ const Login = () => {
       return;
     }
 
-    const result = login(form.email, form.password);
+    setLoading(true);
+    const result = await login(form.email, form.password);
+    setLoading(false);
+
     if (result.success) {
       navigate("/home");
+    } else {
+      setError(result.error || "Login failed");
     }
   };
 
@@ -63,8 +69,13 @@ const Login = () => {
                 </p>
               )}
 
-              <Button type="submit" size="lg" className="w-full font-bold">
-                Log in
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full font-bold"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Log in"}
               </Button>
 
               <a
