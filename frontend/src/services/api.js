@@ -1,3 +1,47 @@
+// Friend API
+export const friendAPI = {
+  sendRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/request/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  acceptRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/accept/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  cancelRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/cancel/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  rejectRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/reject/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  unfriend: async (id) => {
+    const response = await fetch(`${API_URL}/friends/unfriend/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  getFriends: async () => {
+    const response = await fetch(`${API_URL}/friends/list`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+};
 // const API_URL = "http://localhost:5000/api";
 const API_URL = "https://mkbs-realm-server.vercel.app/api";
 // Helper to get auth headers
@@ -44,14 +88,33 @@ export const authAPI = {
     });
     return handleResponse(response);
   },
+
+  getProfile: async (id) => {
+    const response = await fetch(`${API_URL}/auth/profile/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  updateProfile: async (profileData) => {
+    const response = await fetch(`${API_URL}/auth/me`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(profileData),
+    });
+    return handleResponse(response);
+  },
 };
 
 // Posts API
 export const postsAPI = {
-  getPosts: async (page = 1, limit = 10) => {
-    const response = await fetch(`${API_URL}/posts?page=${page}&limit=${limit}`, {
-      headers: getAuthHeaders(),
-    });
+  getPosts: async (page = 1, limit = 10, sort = "recency") => {
+    const response = await fetch(
+      `${API_URL}/posts?page=${page}&limit=${limit}&sort=${sort}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     return handleResponse(response);
   },
 

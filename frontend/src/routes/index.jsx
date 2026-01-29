@@ -4,6 +4,8 @@ import { MainLayout, AuthLayout } from "../layouts";
 import { Login, Register, Home } from "../pages";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import Profile from "../pages/Profile";
+import Friends from "../pages/Friends";
 
 const AppRoutes = () => {
   return (
@@ -20,6 +22,9 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
+          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/friends" element={<Friends />} />
         </Route>
       </Route>
 

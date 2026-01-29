@@ -130,7 +130,6 @@ const login = async (req, res, next) => {
 const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
-
     res.status(200).json({
       success: true,
       data: {
@@ -141,7 +140,10 @@ const getMe = async (req, res, next) => {
           lastName: user.lastName,
           email: user.email,
           avatar: user.avatar,
+          cover: user.cover,
           bio: user.bio,
+          birthday: user.birthday,
+          gender: user.gender,
         },
       },
     });
@@ -154,8 +156,93 @@ const getMe = async (req, res, next) => {
   }
 };
 
+// @desc    Get user profile by id
+// @route   GET /api/auth/profile/:id
+// @access  Public
+const getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          avatar: user.avatar,
+          cover: user.cover,
+          bio: user.bio,
+          birthday: user.birthday,
+          gender: user.gender,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+// @desc    Update current user profile
+// @route   PUT /api/auth/me
+// @access  Private
+const updateProfile = async (req, res, next) => {
+  try {
+    const updates = (({
+      firstName,
+      lastName,
+      avatar,
+      cover,
+      bio,
+      birthday,
+      gender,
+    }) => ({ firstName, lastName, avatar, cover, bio, birthday, gender }))(
+      req.body
+    );
+    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+      new: true,
+    });
+    res.status(200).json({
+      success: true,
+      message: "Profile updated",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          avatar: user.avatar,
+          cover: user.cover,
+          bio: user.bio,
+          birthday: user.birthday,
+          gender: user.gender,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
+  getProfile,
+  updateProfile,
 };

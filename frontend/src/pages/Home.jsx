@@ -12,16 +12,18 @@ const Home = () => {
   const [posting, setPosting] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [sort, setSort] = useState("recency");
 
   // Fetch posts on mount
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    fetchPosts(1, sort);
+    // eslint-disable-next-line
+  }, [sort]);
 
-  const fetchPosts = async (pageNum = 1) => {
+  const fetchPosts = async (pageNum = 1, sortType = sort) => {
     try {
       setLoading(true);
-      const response = await postsAPI.getPosts(pageNum);
+      const response = await postsAPI.getPosts(pageNum, 10, sortType);
       const { posts: newPosts, pagination } = response.data;
 
       if (pageNum === 1) {
@@ -75,7 +77,7 @@ const Home = () => {
 
   const loadMore = () => {
     if (!loading && hasMore) {
-      fetchPosts(page + 1);
+      fetchPosts(page + 1, sort);
     }
   };
 
@@ -97,6 +99,18 @@ const Home = () => {
           onPost={handlePost}
           posting={posting}
         />
+
+        {/* Sort Options */}
+        <div className="flex justify-end mb-4">
+          <select
+            className="border rounded px-2 py-1"
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+          >
+            <option value="recency">Most Recent</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
 
         {/* Posts Feed */}
         {loading && posts.length === 0 ? (

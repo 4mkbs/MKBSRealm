@@ -3,23 +3,38 @@ const Post = require("../models/Post");
 // @desc    Get all posts (feed)
 // @route   GET /api/posts
 // @access  Private
+const User = require("../models/User");
 const getPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const sortBy = req.query.sort === "popularity" ? { likesCount: -1, createdAt: -1 } : { createdAt: -1 };
 
-    const posts = await Post.find()
-      .populate("author", "firstName lastName email avatar")
-      .populate("comments.user", "firstName lastName avatar")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    // Get user's friends
+    const user = await User.findById(req.user.id).select("friends");
+    const ids = [req.user.id, ...(user.friends || [])];
 
-    const total = await Post.countDocuments();
+    // Aggregate likes count for popularity sort
+    const posts = await Post.aggregate([
+      { $match: { author: { $in: ids.map((id) => typeof id === "object" ? id : new require('mongoose').Types.ObjectId(id)) } } },
+      { $addFields: { likesCount: { $size: "$likes" } } },
+      { $sort: sortBy },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
+    // Get total count
+    const total = await Post.countDocuments({ author: { $in: ids } });
+
+    // Populate author and comments for each post
+    const populatedPosts = await Post.populate(posts, [
+      { path: "author", select: "firstName lastName email avatar" },
+      { path: "comments.user", select: "firstName lastName avatar" },
+    ]);
 
     // Transform posts for frontend
-    const transformedPosts = posts.map((post) => ({
+    const transformedPosts = populatedPosts.map((post) => ({
       id: post._id,
       author: post.author.firstName + " " + post.author.lastName,
       authorId: post.author._id,
@@ -27,7 +42,7 @@ const getPosts = async (req, res, next) => {
       content: post.content,
       image: post.image,
       likes: post.likes.length,
-      isLiked: post.likes.includes(req.user.id),
+      isLiked: post.likes.map(String).includes(String(req.user.id)),
       comments: post.comments.length,
       time: getTimeAgo(post.createdAt),
       createdAt: post.createdAt,

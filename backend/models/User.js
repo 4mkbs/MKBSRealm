@@ -37,10 +37,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    cover: {
+      type: String,
+      default: "",
+    },
     bio: {
       type: String,
       default: "",
     },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // incoming
+    sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // outgoing
   },
   {
     timestamps: true,

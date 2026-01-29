@@ -5,6 +5,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
+const friendRoutes = require("./routes/friendRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,8 +33,10 @@ app.get("/", (req, res) => {
   });
 });
 
+
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/friends", friendRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
