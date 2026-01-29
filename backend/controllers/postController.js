@@ -9,7 +9,10 @@ const getPosts = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const sortBy = req.query.sort === "popularity" ? { likesCount: -1, createdAt: -1 } : { createdAt: -1 };
+    const sortBy =
+      req.query.sort === "popularity"
+        ? { likesCount: -1, createdAt: -1 }
+        : { createdAt: -1 };
 
     // Get user's friends
     const user = await User.findById(req.user.id).select("friends");
@@ -17,7 +20,17 @@ const getPosts = async (req, res, next) => {
 
     // Aggregate likes count for popularity sort
     const posts = await Post.aggregate([
-      { $match: { author: { $in: ids.map((id) => typeof id === "object" ? id : new require('mongoose').Types.ObjectId(id)) } } },
+      {
+        $match: {
+          author: {
+            $in: ids.map((id) =>
+              typeof id === "object"
+                ? id
+                : new require("mongoose").Types.ObjectId(id)
+            ),
+          },
+        },
+      },
       { $addFields: { likesCount: { $size: "$likes" } } },
       { $sort: sortBy },
       { $skip: skip },

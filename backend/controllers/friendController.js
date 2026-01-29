@@ -4,13 +4,28 @@ const User = require("../models/User");
 exports.sendFriendRequest = async (req, res) => {
   try {
     const { id } = req.params; // target user id
-    if (id === req.user.id) return res.status(400).json({ success: false, message: "Cannot send request to yourself" });
+    if (id === req.user.id)
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot send request to yourself" });
     const user = await User.findById(req.user.id);
     const target = await User.findById(id);
-    if (!target) return res.status(404).json({ success: false, message: "User not found" });
-    if (user.friends.includes(id)) return res.status(400).json({ success: false, message: "Already friends" });
-    if (user.sentRequests.includes(id)) return res.status(400).json({ success: false, message: "Request already sent" });
-    if (user.friendRequests.includes(id)) return res.status(400).json({ success: false, message: "User already sent you a request" });
+    if (!target)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (user.friends.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "Already friends" });
+    if (user.sentRequests.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "Request already sent" });
+    if (user.friendRequests.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "User already sent you a request" });
     user.sentRequests.push(id);
     target.friendRequests.push(req.user.id);
     await user.save();
@@ -27,11 +42,21 @@ exports.acceptFriendRequest = async (req, res) => {
     const { id } = req.params; // sender user id
     const user = await User.findById(req.user.id);
     const sender = await User.findById(id);
-    if (!sender) return res.status(404).json({ success: false, message: "User not found" });
-    if (!user.friendRequests.includes(id)) return res.status(400).json({ success: false, message: "No request from this user" });
-    user.friendRequests = user.friendRequests.filter(uid => uid.toString() !== id);
+    if (!sender)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (!user.friendRequests.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "No request from this user" });
+    user.friendRequests = user.friendRequests.filter(
+      (uid) => uid.toString() !== id
+    );
     user.friends.push(id);
-    sender.sentRequests = sender.sentRequests.filter(uid => uid.toString() !== req.user.id);
+    sender.sentRequests = sender.sentRequests.filter(
+      (uid) => uid.toString() !== req.user.id
+    );
     sender.friends.push(req.user.id);
     await user.save();
     await sender.save();
@@ -47,10 +72,20 @@ exports.cancelFriendRequest = async (req, res) => {
     const { id } = req.params; // target user id
     const user = await User.findById(req.user.id);
     const target = await User.findById(id);
-    if (!target) return res.status(404).json({ success: false, message: "User not found" });
-    if (!user.sentRequests.includes(id)) return res.status(400).json({ success: false, message: "No sent request to this user" });
-    user.sentRequests = user.sentRequests.filter(uid => uid.toString() !== id);
-    target.friendRequests = target.friendRequests.filter(uid => uid.toString() !== req.user.id);
+    if (!target)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (!user.sentRequests.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "No sent request to this user" });
+    user.sentRequests = user.sentRequests.filter(
+      (uid) => uid.toString() !== id
+    );
+    target.friendRequests = target.friendRequests.filter(
+      (uid) => uid.toString() !== req.user.id
+    );
     await user.save();
     await target.save();
     res.json({ success: true, message: "Friend request canceled" });
@@ -65,10 +100,20 @@ exports.rejectFriendRequest = async (req, res) => {
     const { id } = req.params; // sender user id
     const user = await User.findById(req.user.id);
     const sender = await User.findById(id);
-    if (!sender) return res.status(404).json({ success: false, message: "User not found" });
-    if (!user.friendRequests.includes(id)) return res.status(400).json({ success: false, message: "No request from this user" });
-    user.friendRequests = user.friendRequests.filter(uid => uid.toString() !== id);
-    sender.sentRequests = sender.sentRequests.filter(uid => uid.toString() !== req.user.id);
+    if (!sender)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (!user.friendRequests.includes(id))
+      return res
+        .status(400)
+        .json({ success: false, message: "No request from this user" });
+    user.friendRequests = user.friendRequests.filter(
+      (uid) => uid.toString() !== id
+    );
+    sender.sentRequests = sender.sentRequests.filter(
+      (uid) => uid.toString() !== req.user.id
+    );
     await user.save();
     await sender.save();
     res.json({ success: true, message: "Friend request rejected" });
@@ -83,10 +128,16 @@ exports.unfriend = async (req, res) => {
     const { id } = req.params; // friend user id
     const user = await User.findById(req.user.id);
     const friend = await User.findById(id);
-    if (!friend) return res.status(404).json({ success: false, message: "User not found" });
-    if (!user.friends.includes(id)) return res.status(400).json({ success: false, message: "Not friends" });
-    user.friends = user.friends.filter(uid => uid.toString() !== id);
-    friend.friends = friend.friends.filter(uid => uid.toString() !== req.user.id);
+    if (!friend)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    if (!user.friends.includes(id))
+      return res.status(400).json({ success: false, message: "Not friends" });
+    user.friends = user.friends.filter((uid) => uid.toString() !== id);
+    friend.friends = friend.friends.filter(
+      (uid) => uid.toString() !== req.user.id
+    );
     await user.save();
     await friend.save();
     res.json({ success: true, message: "Unfriended" });

@@ -105,7 +105,7 @@ const Home = () => {
           <select
             className="border rounded px-2 py-1"
             value={sort}
-            onChange={e => setSort(e.target.value)}
+            onChange={(e) => setSort(e.target.value)}
           >
             <option value="recency">Most Recent</option>
             <option value="popularity">Most Popular</option>

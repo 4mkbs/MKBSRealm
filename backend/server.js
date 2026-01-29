@@ -14,25 +14,26 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Middleware
-app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000"],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "MKBS Realm API",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth",
       posts: "/api/posts",
-    }
+    },
   });
 });
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
