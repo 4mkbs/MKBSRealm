@@ -43,14 +43,18 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user && token) {
       // Connect to socket server
-      const newSocket = io(
+      const socketURL =
+        import.meta.env.VITE_SOCKET_URL ||
         import.meta.env.VITE_API_URL?.replace("/api", "") ||
-          "http://localhost:5000",
-        {
-          auth: { token },
-          transports: ["websocket", "polling"],
-        }
-      );
+        "http://localhost:5000";
+
+      const newSocket = io(socketURL, {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
 
       newSocket.on("connect", () => {
         console.log("Socket connected");

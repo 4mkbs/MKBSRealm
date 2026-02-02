@@ -39,7 +39,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       /\.vercel\.app$/,
-      process.env.CLIENT_URL
+      process.env.CLIENT_URL,
     ],
     credentials: true,
   })
