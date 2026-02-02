@@ -1,9 +1,11 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
+const mongoose = require("mongoose");
+const { getTimeAgo } = require("../utils/helpers");
 
 // @desc    Get all posts (feed)
 // @route   GET /api/posts
 // @access  Private
-const User = require("../models/User");
 const getPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -18,15 +20,13 @@ const getPosts = async (req, res, next) => {
     const user = await User.findById(req.user.id).select("friends");
     const ids = [req.user.id, ...(user.friends || [])];
 
-    // Aggregate likes count for popularity sort
+    // Aggregate likes count for popularity sort with single populate
     const posts = await Post.aggregate([
       {
         $match: {
           author: {
             $in: ids.map((id) =>
-              typeof id === "object"
-                ? id
-                : new require("mongoose").Types.ObjectId(id)
+              typeof id === "object" ? id : new mongoose.Types.ObjectId(id)
             ),
           },
         },
@@ -40,7 +40,7 @@ const getPosts = async (req, res, next) => {
     // Get total count
     const total = await Post.countDocuments({ author: { $in: ids } });
 
-    // Populate author and comments for each post
+    // Populate author and comments with a single operation
     const populatedPosts = await Post.populate(posts, [
       { path: "author", select: "firstName lastName email avatar" },
       { path: "comments.user", select: "firstName lastName avatar" },
@@ -276,28 +276,7 @@ const deletePost = async (req, res, next) => {
   }
 };
 
-// Helper function to get time ago
-function getTimeAgo(date) {
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-
-  const intervals = {
-    year: 31536000,
-    month: 2592000,
-    week: 604800,
-    day: 86400,
-    hour: 3600,
-    minute: 60,
-  };
-
-  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-    const interval = Math.floor(seconds / secondsInUnit);
-    if (interval >= 1) {
-      return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
-    }
-  }
-
-  return "Just now";
-}
+// Helper function to get time ago - REMOVED (imported from utils)
 
 module.exports = {
   getPosts,

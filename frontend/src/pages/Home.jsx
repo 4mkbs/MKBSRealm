@@ -2,10 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CreatePost, PostCard } from "../components/feed";
 import { Button } from "../components/ui";
+import { PostSkeleton } from "../components/common/Skeleton";
 import { postsAPI } from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 const Home = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [postText, setPostText] = useState("");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,7 @@ const Home = () => {
       setPage(pageNum);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      addToast("Failed to load posts", "error");
     } finally {
       setLoading(false);
     }
@@ -49,8 +53,10 @@ const Home = () => {
       const response = await postsAPI.createPost(postText);
       setPosts([response.data.post, ...posts]);
       setPostText("");
+      addToast("Post created successfully!", "success");
     } catch (error) {
       console.error("Error creating post:", error);
+      addToast("Failed to create post", "error");
     } finally {
       setPosting(false);
     }
@@ -70,8 +76,13 @@ const Home = () => {
             : post
         )
       );
+      addToast(
+        response.data.isLiked ? "Post liked!" : "Post unliked",
+        "success"
+      );
     } catch (error) {
       console.error("Error toggling like:", error);
+      addToast("Failed to like post", "error");
     }
   };
 
@@ -114,9 +125,10 @@ const Home = () => {
 
         {/* Posts Feed */}
         {loading && posts.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1877f2] mx-auto"></div>
-            <p className="text-gray-500 mt-4">Loading posts...</p>
+          <div className="space-y-4">
+            <PostSkeleton />
+            <PostSkeleton />
+            <PostSkeleton />
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-8 bg-white rounded-xl shadow">

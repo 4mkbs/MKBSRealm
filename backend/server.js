@@ -1,17 +1,32 @@
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
+const { initializeSocket } = require("./config/socket");
 const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const friendRoutes = require("./routes/friendRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+const { generalLimiter, authLimiter } = require("./middleware/rateLimiter");
+const { applySecurity } = require("./middleware/security");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize Socket.io
+const io = initializeSocket(server);
+
+// Make io accessible in routes
+app.set("io", io);
+
+// Apply security middleware
+applySecurity(app);
 
 // Middleware
 app.use(
@@ -23,6 +38,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
+
 // Routes
 app.get("/", (req, res) => {
   res.json({
@@ -31,13 +49,15 @@ app.get("/", (req, res) => {
     endpoints: {
       auth: "/api/auth",
       posts: "/api/posts",
+      messages: "/api/messages",
     },
   });
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/friends", friendRoutes);
+app.use("/api/messages", messageRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
@@ -57,7 +77,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server
-app.listen(PORT, () => {
+// Start the server with Socket.io
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Socket.io is ready for connections`);
 });

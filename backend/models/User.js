@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
     password: {
       type: String,
@@ -79,6 +80,10 @@ userSchema.pre("save", async function () {
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Create indexes for frequently queried fields
+userSchema.index({ friends: 1 });
+userSchema.index({ friendRequests: 1 });
 
 const User = mongoose.model("User", userSchema);
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout, AuthLayout } from "../layouts";
-import { Login, Register, Home } from "../pages";
+import { Login, Register, Home, Messenger } from "../pages";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import Profile from "../pages/Profile";
@@ -25,6 +25,7 @@ const AppRoutes = () => {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/messenger" element={<Messenger />} />
         </Route>
       </Route>
 

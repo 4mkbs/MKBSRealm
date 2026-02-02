@@ -8,15 +8,22 @@ const {
   deletePost,
 } = require("../controllers/postController");
 const { protect } = require("../middleware/auth");
+const {
+  validateCreatePost,
+  validateComment,
+  validateObjectId,
+} = require("../middleware/validation");
 
 // All routes are protected
 router.use(protect);
 
-router.route("/").get(getPosts).post(createPost);
+router.route("/").get(getPosts).post(validateCreatePost, createPost);
 
-router.route("/:id").delete(deletePost);
+router.route("/:id").delete(validateObjectId, deletePost);
 
-router.put("/:id/like", toggleLike);
+router.put("/:id/like", validateObjectId, toggleLike);
+
+router.post("/:id/comments", validateObjectId, validateComment, addComment);
 
 router.post("/:id/comments", addComment);
 

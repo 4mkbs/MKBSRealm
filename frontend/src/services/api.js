@@ -1,49 +1,5 @@
-// Friend API
-export const friendAPI = {
-  sendRequest: async (id) => {
-    const response = await fetch(`${API_URL}/friends/request/${id}`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-  acceptRequest: async (id) => {
-    const response = await fetch(`${API_URL}/friends/accept/${id}`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-  cancelRequest: async (id) => {
-    const response = await fetch(`${API_URL}/friends/cancel/${id}`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-  rejectRequest: async (id) => {
-    const response = await fetch(`${API_URL}/friends/reject/${id}`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-  unfriend: async (id) => {
-    const response = await fetch(`${API_URL}/friends/unfriend/${id}`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-  getFriends: async () => {
-    const response = await fetch(`${API_URL}/friends/list`, {
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
-  },
-};
-// const API_URL = "http://localhost:5000/api";
-const API_URL = "https://mkbs-realm-server.vercel.app/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 // Helper to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem("auth_token");
@@ -153,4 +109,117 @@ export const postsAPI = {
   },
 };
 
-export default { authAPI, postsAPI };
+// Friend API
+export const friendAPI = {
+  sendRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/request/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  acceptRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/accept/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  cancelRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/cancel/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  rejectRequest: async (id) => {
+    const response = await fetch(`${API_URL}/friends/reject/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  unfriend: async (id) => {
+    const response = await fetch(`${API_URL}/friends/unfriend/${id}`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+  getFriends: async () => {
+    const response = await fetch(`${API_URL}/friends/list`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+};
+
+// Messages API
+export const messagesAPI = {
+  getConversations: async () => {
+    const response = await fetch(`${API_URL}/messages/conversations`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  getOrCreateConversation: async (participantId) => {
+    const response = await fetch(
+      `${API_URL}/messages/conversations/${participantId}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  getMessages: async (conversationId, page = 1, limit = 50) => {
+    const response = await fetch(
+      `${API_URL}/messages/${conversationId}/messages?page=${page}&limit=${limit}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  sendMessage: async (conversationId, content, messageType = "text") => {
+    const response = await fetch(
+      `${API_URL}/messages/${conversationId}/messages`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content, messageType }),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  markAsRead: async (conversationId) => {
+    const response = await fetch(`${API_URL}/messages/${conversationId}/read`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  deleteMessage: async (messageId) => {
+    const response = await fetch(`${API_URL}/messages/messages/${messageId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  searchUsers: async (query) => {
+    const response = await fetch(
+      `${API_URL}/messages/users/search?q=${encodeURIComponent(query)}`,
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+};
+
+export default { authAPI, postsAPI, friendAPI, messagesAPI };
