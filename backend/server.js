@@ -13,17 +13,21 @@ const { generalLimiter, authLimiter } = require("./middleware/rateLimiter");
 const { applySecurity } = require("./middleware/security");
 
 const app = express();
-const server = http.createServer(app);
+
+// Detect if running on Vercel
+const isVercel = process.env.VERCEL === "1";
+const server = !isVercel ? http.createServer(app) : null;
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 connectDB();
 
-// Initialize Socket.io
-const io = initializeSocket(server);
-
-// Make io accessible in routes
-app.set("io", io);
+// Initialize Socket.io (only on local development)
+let io = null;
+if (!isVercel) {
+  io = initializeSocket(server);
+  app.set("io", io);
+}
 
 // Apply security middleware
 applySecurity(app);
@@ -77,8 +81,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server with Socket.io
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Socket.io is ready for connections`);
-});
+// Export for Vercel or start server locally
+if (isVercel) {
+  module.exports = app;
+} else {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log("Socket.io is ready for connections");
+  });
+}
