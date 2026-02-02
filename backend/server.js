@@ -35,7 +35,12 @@ applySecurity(app);
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      /\.vercel\.app$/,
+      process.env.CLIENT_URL
+    ],
     credentials: true,
   })
 );
@@ -50,12 +55,18 @@ app.get("/", (req, res) => {
   res.json({
     message: "MKBS Realm API",
     version: "1.0.0",
+    status: "running",
     endpoints: {
       auth: "/api/auth",
       posts: "/api/posts",
       messages: "/api/messages",
     },
   });
+});
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 app.use("/api/auth", authLimiter, authRoutes);
